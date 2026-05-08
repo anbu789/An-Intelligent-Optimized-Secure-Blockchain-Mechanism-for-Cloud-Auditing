@@ -1,0 +1,14 @@
+{
+  "filename": "ham_0001.txt",
+  "data_type": "text",
+  "timestamp": "2026-03-13T19:27:31",
+  "s3_key": "encrypted/text/ham_0001.txt",
+  "buffalo": null,
+  "fitness": null,
+  "hash1": null,
+  "hash2": null,
+  "key_match": null,
+  "verdict": "ERROR",
+  "action_taken": "Profile not found: /home/anbuselvanmurugesan/Documents/obhsb_project/modules/profiles/text_normal_profile.npy. Run build_profiles.py first to generate normal profiles.",
+  "log_path": null
+}

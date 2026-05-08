@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Home — OBHSB Dashboard{% endblock %}
+{% block meta_desc %}Upload files to the OBHSB cloud security pipeline and view recent audit logs.{% endblock %}
+{% block topbar_title %}Home &amp; Upload{% endblock %}
+
+{% block content %}
+
+<!-- ── Page heading ──────────────────────────────────────────────────────── -->
+<div class="section-title">Upload to OBHSB Pipeline</div>
+<p class="section-sub">
+  Upload a <strong>.txt</strong>, <strong>.jpg</strong>, or <strong>.wav</strong> file —
+  it will be preprocessed, AES-encrypted, registered on the blockchain, and stored in S3.
+</p>
+
+<!-- ── Two-column layout: upload left, info right ───────────────────────── -->
+<div style="display:grid; grid-template-columns:1fr 340px; gap:1.5rem; align-items:start;">
+
+  <!-- Upload card -->
+  <div class="obhsb-card" id="upload-card">
+    <div class="card-header-row">
+      <span class="card-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload File
+      </span>
+    </div>
+
+    <form id="upload-form" action="{{ url_for('upload') }}" method="POST" enctype="multipart/form-data">
+
+      <!-- Drop zone -->
+      <div class="file-drop" id="file-drop-zone" role="button" tabindex="0"
+           aria-label="Click or drag a file here to upload">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
+             stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round"
+             stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+
+        <p id="file-drop-label" class="file-drop-label" style="margin-top:0.75rem;">
+          <strong>Click to browse</strong> or drag &amp; drop here
+        </p>
+        <p style="font-size:0.72rem; color:var(--text-muted); margin-top:0.3rem;">
+          Accepted: .txt &nbsp;·&nbsp; .jpg &nbsp;·&nbsp; .wav
+        </p>
+
+        <input type="file" id="file-input" name="file"
+               accept=".txt,.jpg,.wav" required aria-label="File upload input" />
+      </div>
+
+      <!-- Data type (auto-detects from extension, but user can override) -->
+      <div class="obhsb-form-group" style="margin-top:1rem;">
+        <label class="obhsb-label" for="data-type-select">Data Type</label>
+        <select class="obhsb-select" id="data-type-select" name="data_type" aria-label="Data type selector">
+          <option value="text">Text (.txt)</option>
+          <option value="image">Image (.jpg)</option>
+          <option value="audio">Audio (.wav)</option>
+        </select>
+        <p style="font-size:0.72rem; color:var(--text-muted); margin-top:0.3rem;">
+          Auto-detected from file extension when you pick a file.
+        </p>
+      </div>
+
+      <button type="submit" class="btn-obhsb btn-primary" id="upload-btn"
+              style="width:100%; justify-content:center; margin-top:0.5rem;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+        </svg>
+        Encrypt &amp; Upload
+      </button>
+
+    </form>
+  </div>
+
+  <!-- Info panel -->
+  <div>
+    <!-- Pipeline steps -->
+    <div class="obhsb-card">
+      <div class="card-title" style="margin-bottom:1rem;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="16"/>
+          <line x1="8" y1="12" x2="16" y2="12"/>
+        </svg>
+        Upload Pipeline
+      </div>
+      <div style="display:flex; flex-direction:column; gap:0.6rem;">
+        {% for step in [
+            ("Phase 0", "Preprocess", "Read raw bytes"),
+            ("Phase 1", "Encrypt", "AES-256 (IV + ciphertext)"),
+            ("Phase 1", "Hash1", "SHA-256(encrypted bytes)"),
+            ("Phase 1", "Blockchain", "add_block() → immutable"),
+            ("Phase 1", "S3 Upload", "encrypted/type/filename")
+        ] %}
+        <div style="display:flex; align-items:center; gap:0.65rem;">
+          <span style="font-size:0.65rem; font-weight:700; color:var(--accent-light);
+                       background:var(--blue-bg); border:1px solid rgba(37,99,235,0.3);
+                       border-radius:4px; padding:0.1rem 0.4rem; white-space:nowrap;">
+            {{ step[0] }}
+          </span>
+          <span style="font-size:0.82rem; font-weight:600; color:var(--text-primary);">
+            {{ step[1] }}
+          </span>
+          <span style="font-size:0.75rem; color:var(--text-secondary);">— {{ step[2] }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Key rules reminder -->
+    <div class="obhsb-card" style="margin-top:0;">
+      <div class="card-title" style="margin-bottom:0.75rem;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        Key Rules
+      </div>
+      <ul style="font-size:0.78rem; color:var(--text-secondary);
+                 list-style:none; display:flex; flex-direction:column; gap:0.4rem;">
+        <li>🔐 Hash1 = SHA-256(<em>encrypted</em> bytes)</li>
+        <li>⛓️ Hash1 stored in blockchain (immutable)</li>
+        <li>☁️ S3 stores encrypted files only</li>
+        <li>🚫 Raw bytes never leave the system</li>
+      </ul>
+    </div>
+  </div>
+
+</div><!-- /grid -->
+
+<!-- ── Recent Audit Logs ──────────────────────────────────────────────────── -->
+<div style="margin-top:0.5rem;">
+  <div class="card-header-row">
+    <span class="section-title" style="font-size:1rem; margin-bottom:0;">
+      Recent Audit Logs
+    </span>
+    <a href="{{ url_for('files') }}" class="btn-obhsb btn-secondary btn-sm">
+      View All Files →
+    </a>
+  </div>
+  <p class="section-sub" style="margin-top:0.25rem;">Last 10 audit results from <code style="font-size:0.78rem; color:var(--accent-light);">outputs/audit_logs/</code></p>
+
+  {% if recent_logs %}
+  <div class="obhsb-table-wrap">
+    <table class="obhsb-table" id="recent-logs-table">
+      <thead>
+        <tr>
+          <th>Filename</th>
+          <th>Type</th>
+          <th>Verdict</th>
+          <th>Buffalo</th>
+          <th>Fitness</th>
+          <th>Key Match</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in recent_logs %}
+        <tr>
+          <!-- Filename -->
+          <td>
+            <span class="hash-mono" style="font-size:0.8rem; color:var(--text-primary);">
+              {{ log.filename }}
+            </span>
+          </td>
+
+          <!-- Data type badge -->
+          <td>
+            <span style="font-size:0.72rem; font-weight:600; color:var(--text-muted);
+                         text-transform:uppercase; letter-spacing:0.06em;">
+              {{ log.data_type }}
+            </span>
+          </td>
+
+          <!-- Verdict badge -->
+          <td>
+            {% set v = log.verdict %}
+            {% if v == "FILE ACCESSED" %}
+              <span class="badge-obhsb badge-accessed">✓ {{ v }}</span>
+            {% elif v == "DATA INJECTED" %}
+              <span class="badge-obhsb badge-injected">✗ {{ v }}</span>
+            {% elif v == "BLOCKED" %}
+              <span class="badge-obhsb badge-blocked">⚠ {{ v }}</span>
+            {% else %}
+              <span class="badge-obhsb badge-error">{{ v or "—" }}</span>
+            {% endif %}
+          </td>
+
+          <!-- Buffalo signal -->
+          <td>
+            {% if log.buffalo == "MAAA" %}
+              <span class="badge-obhsb badge-maaa">MAAA</span>
+            {% elif log.buffalo == "WAAH" %}
+              <span class="badge-obhsb badge-waah">WAAH</span>
+            {% else %}
+              <span style="color:var(--text-muted);">—</span>
+            {% endif %}
+          </td>
+
+          <!-- Fitness -->
+          <td>
+            <span style="font-family:var(--mono); font-size:0.8rem;">
+              {{ "%.4f"|format(log.fitness) if log.fitness is not none else "—" }}
+            </span>
+          </td>
+
+          <!-- Key match -->
+          <td>
+            {% if log.key_match == true %}
+              <span style="color:var(--green); font-weight:600;">✓ Match</span>
+            {% elif log.key_match == false %}
+              <span style="color:var(--red); font-weight:600;">✗ Mismatch</span>
+            {% else %}
+              <span style="color:var(--text-muted);">—</span>
+            {% endif %}
+          </td>
+
+          <!-- Timestamp -->
+          <td>
+            <span style="font-size:0.78rem; color:var(--text-secondary);">
+              {{ log.timestamp[:19].replace("T", " ") if log.timestamp else "—" }}
+            </span>
+          </td>
+
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% else %}
+  <!-- Empty state -->
+  <div class="obhsb-card" style="text-align:center; padding:3rem 1.5rem;">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+         stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round"
+         stroke-linejoin="round" style="margin-bottom:0.75rem;" aria-hidden="true">
+      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+    </svg>
+    <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:0.35rem;">
+      No audit logs yet
+    </p>
+    <p style="color:var(--text-muted); font-size:0.78rem;">
+      Audit a file from the <a href="{{ url_for('files') }}">S3 File Browser</a> to see results here.
+    </p>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- ── Auto-detect data type from file extension ─────────────────────────── -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const fileInput = document.getElementById('file-input');
+    const typeSelect = document.getElementById('data-type-select');
+
+    const extMap = { '.txt': 'text', '.jpg': 'image', '.wav': 'audio' };
+
+    fileInput.addEventListener('change', function () {
+      if (!fileInput.files.length) return;
+      const name = fileInput.files[0].name.toLowerCase();
+      const ext  = name.substring(name.lastIndexOf('.'));
+      if (extMap[ext]) {
+        typeSelect.value = extMap[ext];
+      }
+    });
+
+    // Keyboard accessibility for drop zone
+    const dropZone = document.getElementById('file-drop-zone');
+    dropZone.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+  });
+</script>
+
+{% endblock %}

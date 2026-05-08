@@ -1,0 +1,14 @@
+{
+  "filename": "dog0005.wav",
+  "data_type": "audio",
+  "timestamp": "2026-04-15T13:28:00",
+  "s3_key": "encrypted/audio/dog0005.wav",
+  "buffalo": "MAAA",
+  "fitness": 0.9253,
+  "hash1": "9991be96aba0ae404c12932ab717e1ef30494fa38afb7094548b7130314f81cc",
+  "hash2": "522edcdb9b4e67e4c1f591ef247b61fac6884098c4b3828df655b09c4ce6cd5d",
+  "key_match": false,
+  "verdict": "DATA INJECTED",
+  "action_taken": "ACCESS DENIED",
+  "log_path": null
+}

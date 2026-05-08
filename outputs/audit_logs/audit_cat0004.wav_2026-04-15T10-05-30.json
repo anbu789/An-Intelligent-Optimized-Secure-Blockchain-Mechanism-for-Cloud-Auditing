@@ -1,0 +1,14 @@
+{
+  "filename": "cat0004.wav",
+  "data_type": "audio",
+  "timestamp": "2026-04-15T10:05:30",
+  "s3_key": "encrypted/audio/cat0004.wav",
+  "buffalo": "MAAA",
+  "fitness": 0.8289,
+  "hash1": "20cab7ba9e2b228a08950cca843df13980d7a6324592b8a7c7e6a3f18a7252a9",
+  "hash2": "586b29d0a80a5b429b4d0fb8450c29be189077fbb22bf9c07e0fef0244cbc084",
+  "key_match": false,
+  "verdict": "DATA INJECTED",
+  "action_taken": "ACCESS DENIED",
+  "log_path": null
+}

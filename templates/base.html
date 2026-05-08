@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO -->
+  <title>{% block title %}OBHSB Dashboard{% endblock %}</title>
+  <meta name="description" content="{% block meta_desc %}OBHSB — Optimized Buffalo-Based Homomorphic SHA Blockchain cloud security dashboard.{% endblock %}" />
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+
+<body>
+
+  <!-- ── SIDEBAR ─────────────────────────────────────────────────────────── -->
+  <nav id="sidebar" aria-label="Main navigation">
+
+    <!-- Logo / branding -->
+    <div class="sidebar-logo">
+      <div class="logo-badge">OBHSB</div>
+      <h1>Security Dashboard</h1>
+      <p>Buffalo · SHA · Blockchain</p>
+    </div>
+
+    <!-- Nav links -->
+    <div class="sidebar-nav">
+
+      <div class="nav-section-label">Overview</div>
+
+      <a href="{{ url_for('index') }}"
+         class="nav-link-item {% if request.endpoint == 'index' %}active{% endif %}"
+         id="nav-home">
+        <!-- Home icon -->
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Home &amp; Upload
+      </a>
+
+      <div class="nav-section-label">Security</div>
+
+      <a href="{{ url_for('blockchain') }}"
+         class="nav-link-item {% if request.endpoint == 'blockchain' %}active{% endif %}"
+         id="nav-blockchain">
+        <!-- Chain icon -->
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="2" y="7" width="6" height="10" rx="1"/>
+          <rect x="9" y="7" width="6" height="10" rx="1"/>
+          <rect x="16" y="7" width="6" height="10" rx="1"/>
+          <line x1="8" y1="12" x2="9" y2="12"/>
+          <line x1="15" y1="12" x2="16" y2="12"/>
+        </svg>
+        Blockchain Explorer
+      </a>
+
+      <a href="{{ url_for('files') }}"
+         class="nav-link-item {% if request.endpoint in ('files', 'audit') %}active{% endif %}"
+         id="nav-files">
+        <!-- Folder icon -->
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+        </svg>
+        S3 File Browser
+      </a>
+
+      <a href="{{ url_for('buffalo') }}"
+         class="nav-link-item {% if request.endpoint in ('buffalo', 'buffalo_scan') %}active{% endif %}"
+         id="nav-buffalo">
+        <!-- Shield icon -->
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        Buffalo Scanner
+      </a>
+
+      <div class="nav-section-label">Analysis</div>
+
+      <a href="{{ url_for('metrics') }}"
+         class="nav-link-item {% if request.endpoint == 'metrics' %}active{% endif %}"
+         id="nav-metrics">
+        <!-- Bar chart icon -->
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6"  y1="20" x2="6"  y2="14"/>
+          <line x1="2"  y1="20" x2="22" y2="20"/>
+        </svg>
+        Metrics
+      </a>
+
+      <a href="{{ url_for('dos') }}"
+         class="nav-link-item {% if request.endpoint in ('dos', 'dos_inject', 'dos_audit', 'dos_restore') %}active{% endif %}"
+         id="nav-dos">
+        <!-- Zap / lightning icon -->
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        DoS Simulation
+      </a>
+
+    </div><!-- /sidebar-nav -->
+
+    <!-- Footer -->
+    <div class="sidebar-footer">
+      <div>Phase 5 — Flask Dashboard</div>
+      <div style="margin-top:0.25rem; color: var(--accent-light);">AWS S3 · SQLite Blockchain</div>
+    </div>
+
+  </nav><!-- /sidebar -->
+
+  <!-- ── MAIN CONTENT ────────────────────────────────────────────────────── -->
+  <div id="main-content">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <span class="topbar-title">{% block topbar_title %}OBHSB{% endblock %}</span>
+      <span class="topbar-meta">
+        Optimized Buffalo-Based Homomorphic SHA Blockchain
+      </span>
+    </header>
+
+    <!-- Page content -->
+    <main class="page-content" id="page-main">
+
+      <!-- Flash messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-container" role="alert" aria-live="polite">
+            {% for category, message in messages %}
+              <div class="flash-alert {{ category }}">
+                <!-- Icon per category -->
+                {% if category == 'success' %}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                {% elif category == 'danger' %}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                {% elif category == 'warning' %}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                {% else %}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                {% endif %}
+                <span>{{ message }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <!-- Page-specific content -->
+      {% block content %}{% endblock %}
+
+    </main>
+
+  </div><!-- /main-content -->
+
+  <!-- ── Drag-and-drop enhancement (Home page file input) ────────────────── -->
+  <script>
+    // Highlight file drop zone on drag
+    document.addEventListener('DOMContentLoaded', function () {
+      const dropZone = document.getElementById('file-drop-zone');
+      if (!dropZone) return;
+
+      const fileInput = document.getElementById('file-input');
+
+      dropZone.addEventListener('click', () => fileInput.click());
+
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+      });
+
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+          fileInput.files = e.dataTransfer.files;
+          updateFileLabel(e.dataTransfer.files[0].name);
+        }
+      });
+
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files.length) {
+          updateFileLabel(fileInput.files[0].name);
+        }
+      });
+
+      function updateFileLabel(name) {
+        const lbl = document.getElementById('file-drop-label');
+        if (lbl) lbl.textContent = '📄 ' + name;
+      }
+    });
+
+    // Auto-dismiss flash messages after 6 seconds
+    document.addEventListener('DOMContentLoaded', function () {
+      setTimeout(() => {
+        document.querySelectorAll('.flash-alert').forEach(el => {
+          el.style.transition = 'opacity 0.5s ease';
+          el.style.opacity = '0';
+          setTimeout(() => el.remove(), 500);
+        });
+      }, 6000);
+    });
+  </script>
+
+</body>
+</html>

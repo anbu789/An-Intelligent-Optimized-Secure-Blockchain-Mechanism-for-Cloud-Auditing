@@ -1,0 +1,62 @@
+OBHSB Phase 4 — Summary Report
+Generated : 2026-04-15T13:28:30
+============================================================
+
+PART A — DoS Simulation Results
+----------------------------------------
+  Total files attacked : 15
+  Total attacks caught : 15/15
+  Detection rate       : 100.0 %
+
+  Type       Caught   Total
+  -------- -------- -------
+  text            5       5
+  audio           5       5
+  image           5       5
+
+  Per-file results:
+    ham_0000.txt                              CAUGHT
+    ham_0001.txt                              CAUGHT
+    ham_0002.txt                              CAUGHT
+    ham_0003.txt                              CAUGHT
+    ham_0004.txt                              CAUGHT
+    cat0001.wav                               CAUGHT
+    cat0003.wav                               CAUGHT
+    cat0004.wav                               CAUGHT
+    cat0006.wav                               CAUGHT
+    cat0008.wav                               CAUGHT
+    IMG-20250215-WA0000 (1) (1)-9h02Qh.jpg    CAUGHT
+    IMG-20250215-WA0000 (1) (1)-HzixcC.jpg    CAUGHT
+    IMG-20250215-WA0000 (1) (1)-JkdvTx.jpg    CAUGHT
+    IMG-20250215-WA0000 (1) (1)-smHt0Q.jpg    CAUGHT
+    IMG-20250215-WA0000 (1) (1)-t7Cbwm.jpg    CAUGHT
+
+PART B — OBHSB Performance Metrics
+----------------------------------------
+  Avg Encryption Time  : 0.1491 ms
+  Avg Decryption Time  : 0.1357 ms
+  Avg Hash Time        : 0.0566 ms
+  Avg Throughput       : 3131.1438 Mbps
+  Avg CPU Usage        : 0.3333 %
+  Avg Memory Usage     : 352.9961 MB
+  Stability            : 100.0 % (50/50 trials)
+  Confidential Rate    : 100.0 %
+
+  NOTE: Enc/Dec time and throughput reflect hardware AES-NI
+  acceleration — faster than paper's software-based environment.
+
+PART C — Comparison Table (Paper Table 3)
+----------------------------------------
+  Method                                     Enc ms   Dec ms    Mbps   Conf%   Stab%
+  ---------------------------------------- -------- -------- ------- ------- -------
+  Transparent Integrity Auditing                9.7     10.0    84.0    90.0    83.0
+  Double Copy Storage Blockchain               12.3     14.0    81.0    89.0    80.0
+  Key Recoverability Blockchain                 6.9      7.2    90.0    94.0    91.2
+  Blockchain-based Offline Auditing             8.0      9.7    88.6    92.3    93.0
+  OBHSB (Proposed)                           0.1491   0.1357 3131.1438   100.0   100.0
+
+OUTPUT FILES
+----------------------------------------
+  Chart   : /home/anbuselvanmurugesan/Documents/obhsb_project/outputs/metrics_charts.png
+  CSV     : /home/anbuselvanmurugesan/Documents/obhsb_project/outputs/comparison_table.csv
+  Summary : /home/anbuselvanmurugesan/Documents/obhsb_project/outputs/phase4_summary.txt

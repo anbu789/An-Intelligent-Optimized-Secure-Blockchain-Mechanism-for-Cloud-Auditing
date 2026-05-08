@@ -1,0 +1,14 @@
+{
+  "filename": "IMG-20250215-WA0000 (1) (1)-smHt0Q.jpg",
+  "data_type": "image",
+  "timestamp": "2026-04-15T10:16:55",
+  "s3_key": "encrypted/image/IMG-20250215-WA0000 (1) (1)-smHt0Q.jpg",
+  "buffalo": "MAAA",
+  "fitness": 0.823,
+  "hash1": "2ece8418244dbde89a09b679d91e300ba5b464f038b2112089d95d67c76cba2c",
+  "hash2": "db54ad14c5f6b8eb12df6b7b1d2f09127ce0154df3ec18fc611ac0b863584a2c",
+  "key_match": false,
+  "verdict": "DATA INJECTED",
+  "action_taken": "ACCESS DENIED",
+  "log_path": null
+}

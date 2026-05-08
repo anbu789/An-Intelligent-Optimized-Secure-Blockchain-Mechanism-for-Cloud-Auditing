@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block title %}Buffalo Scanner — OBHSB Dashboard{% endblock %}
+{% block meta_desc %}Run the Buffalo Pa* homomorphic hash attack detection on any encrypted file in S3.{% endblock %}
+{% block topbar_title %}Buffalo Scanner{% endblock %}
+
+{% block content %}
+
+<!-- ── Page heading ──────────────────────────────────────────────────────── -->
+<div class="section-title">Buffalo Scanner</div>
+<p class="section-sub">
+  Run <strong>Pa*(b3)</strong> — cosine similarity of the file's hash vector against the normal profile.
+  Fitness ≥ threshold → <span style="color:var(--green); font-weight:600;">MAAA ✅ Safe</span>.
+  Fitness &lt; threshold → <span style="color:var(--red); font-weight:600;">WAAH ❌ Malicious</span>.
+</p>
+
+<!-- ── Two-column layout: form left, info right ──────────────────────────── -->
+<div style="display:grid; grid-template-columns:1fr 320px; gap:1.5rem; align-items:start;">
+
+  <!-- Scan form -->
+  <div class="obhsb-card" id="buffalo-scan-card">
+    <div class="card-header-row" style="margin-bottom:1.25rem;">
+      <span class="card-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        Scan a File
+      </span>
+    </div>
+
+    <form method="POST" action="{{ url_for('buffalo_scan') }}" id="buffalo-form">
+
+      <div style="display:grid; grid-template-columns:1fr 160px; gap:1rem;">
+        <!-- Filename -->
+        <div class="obhsb-form-group" style="margin-bottom:0;">
+          <label class="obhsb-label" for="buffalo-filename">Filename</label>
+          <input type="text" class="obhsb-input" id="buffalo-filename" name="filename"
+                 placeholder="e.g. ham_0001.txt  or  dog0005.wav"
+                 value="{{ scan_result.filename if scan_result else '' }}"
+                 required aria-label="File name to scan" />
+        </div>
+
+        <!-- Data type -->
+        <div class="obhsb-form-group" style="margin-bottom:0;">
+          <label class="obhsb-label" for="buffalo-dtype">Data Type</label>
+          <select class="obhsb-select" id="buffalo-dtype" name="data_type" aria-label="Data type">
+            <option value="text"  {{ 'selected' if scan_result and scan_result.data_type == 'text'  else '' }}>Text</option>
+            <option value="image" {{ 'selected' if scan_result and scan_result.data_type == 'image' else '' }}>Image</option>
+            <option value="audio" {{ 'selected' if scan_result and scan_result.data_type == 'audio' else '' }}>Audio</option>
+          </select>
+        </div>
+      </div>
+
+      <p style="font-size:0.72rem; color:var(--text-muted); margin:0.5rem 0 1rem;">
+        File must exist in S3 under <code style="color:var(--accent-light);">encrypted/{type}/{filename}</code>
+      </p>
+
+      <button type="submit" class="btn-obhsb btn-primary" id="scan-btn"
+              style="width:100%; justify-content:center;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <polyline points="9 12 11 14 15 10"/>
+        </svg>
+        Run Buffalo Pa*
+      </button>
+
+    </form>
+  </div>
+
+  <!-- Algorithm info panel -->
+  <div>
+    <div class="obhsb-card">
+      <div class="card-title" style="margin-bottom:0.85rem;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="16"/>
+          <line x1="8" y1="12" x2="16" y2="12"/>
+        </svg>
+        How Pa*(b3) Works
+      </div>
+      <ol style="font-size:0.78rem; color:var(--text-secondary); padding-left:1.1rem;
+                 display:flex; flex-direction:column; gap:0.45rem; line-height:1.5;">
+        <li>Download encrypted bytes from S3</li>
+        <li>SHA-256 → 64-char hex hash</li>
+        <li>Convert hash → 32-float vector</li>
+        <li>Cosine similarity vs normal profile</li>
+        <li>Fitness ≥ threshold → <strong style="color:var(--green);">MAAA</strong></li>
+        <li>Fitness &lt; threshold → <strong style="color:var(--red);">WAAH</strong></li>
+      </ol>
+    </div>
+
+    <div class="obhsb-card" style="margin-top:0;">
+      <div class="card-title" style="margin-bottom:0.85rem;">Thresholds</div>
+      <div style="display:flex; flex-direction:column; gap:0.4rem;">
+        {% for dt, thr in [('Text', '0.70'), ('Image', '0.91'), ('Audio', '0.70')] %}
+        <div style="display:flex; justify-content:space-between; align-items:center;
+                    font-size:0.8rem; padding:0.35rem 0; border-bottom:1px solid var(--border);">
+          <span style="color:var(--text-secondary);">{{ dt }}</span>
+          <span style="font-family:var(--mono); font-weight:700;
+                       color:var(--accent-light);">{{ thr }}</span>
+        </div>
+        {% endfor %}
+        <p style="font-size:0.7rem; color:var(--text-muted); margin-top:0.4rem;">
+          Audit mode always uses Text threshold (0.70) — encrypted bytes are uniform.
+        </p>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /grid -->
+
+<!-- ── Scan Result ────────────────────────────────────────────────────────── -->
+{% if scan_result %}
+{% set signal = scan_result.signal %}
+{% set is_maaa = (signal == 'MAAA') %}
+
+<div class="obhsb-card {{ 'glow-green' if is_maaa else 'glow-red' }}"
+     id="buffalo-result-card" style="margin-top:0.5rem;">
+
+  <!-- Result header -->
+  <div class="card-header-row" style="margin-bottom:1.5rem;">
+    <span class="card-title" style="font-size:1rem;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+      Scan Result — {{ scan_result.filename }}
+    </span>
+
+    <!-- Signal badge -->
+    {% if is_maaa %}
+      <span class="badge-obhsb badge-maaa"
+            style="font-size:1rem; padding:0.5rem 1.25rem; letter-spacing:0.05em;">
+        ✅ MAAA — SAFE
+      </span>
+    {% else %}
+      <span class="badge-obhsb badge-waah"
+            style="font-size:1rem; padding:0.5rem 1.25rem; letter-spacing:0.05em;">
+        ❌ WAAH — MALICIOUS
+      </span>
+    {% endif %}
+  </div>
+
+  <!-- ── Fitness Gauge ─────────────────────────────────────────────────── -->
+  {% set fitness_pct   = (scan_result.fitness * 100) | round(1) %}
+  {% set threshold_pct = (scan_result.threshold * 100) | round(1) %}
+
+  <div style="margin-bottom:1.75rem;">
+    <div style="display:flex; justify-content:space-between; align-items:baseline;
+                margin-bottom:0.5rem;">
+      <span class="obhsb-label">Fitness Score (Pa* Cosine Similarity)</span>
+      <span style="font-family:var(--mono); font-size:1.1rem; font-weight:700;
+                   color:{{ 'var(--green)' if is_maaa else 'var(--red)' }};">
+        {{ "%.4f"|format(scan_result.fitness) }}
+      </span>
+    </div>
+
+    <!-- Track -->
+    <div style="position:relative; height:14px; background:var(--bg-surface);
+                border:1px solid var(--border); border-radius:20px; overflow:visible;
+                margin-bottom:0.4rem;">
+
+      <!-- Fill -->
+      <div style="width:{{ fitness_pct }}%; height:100%; border-radius:20px;
+                  background:linear-gradient(90deg,
+                    {{ 'var(--green), #52d869' if is_maaa else 'var(--red), #ff6b6b' }});
+                  transition:width 0.8s ease;">
+      </div>
+
+      <!-- Threshold marker line -->
+      <div style="position:absolute; left:{{ threshold_pct }}%; top:-4px; bottom:-4px;
+                  width:2px; background:var(--yellow); border-radius:2px;"
+           title="Threshold: {{ scan_result.threshold }}">
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; font-size:0.7rem;
+                color:var(--text-muted);">
+      <span>0.0 (Suspicious)</span>
+      <span style="color:var(--yellow);">▲ Threshold: {{ scan_result.threshold }}</span>
+      <span>1.0 (Normal)</span>
+    </div>
+  </div>
+
+  <!-- ── Stat cards ─────────────────────────────────────────────────────── -->
+  <div class="stat-grid" style="grid-template-columns:repeat(4,1fr); margin-bottom:1.25rem;">
+
+    <div class="stat-card {{ 'stat-green' if is_maaa else 'stat-red' }}">
+      <div class="stat-label">Signal</div>
+      <div class="stat-value" style="font-size:1.1rem;">{{ signal }}</div>
+      <div class="stat-sub">Pa*(b3) decision</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Fitness</div>
+      <div class="stat-value" style="font-family:var(--mono); font-size:1rem;">
+        {{ "%.4f"|format(scan_result.fitness) }}
+      </div>
+      <div class="stat-sub">cosine similarity</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Threshold</div>
+      <div class="stat-value" style="font-family:var(--mono); font-size:1rem;">
+        {{ scan_result.threshold }}
+      </div>
+      <div class="stat-sub">"text" threshold used</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Normal Profile Mean</div>
+      <div class="stat-value" style="font-family:var(--mono); font-size:1rem;">
+        {{ "%.4f"|format(scan_result.normal_fitness) }}
+      </div>
+      <div class="stat-sub">profile anchor</div>
+    </div>
+
+  </div>
+
+  <!-- ── Na* Neglection ─────────────────────────────────────────────────── -->
+  <hr class="obhsb-divider" />
+  <div class="card-title" style="margin-bottom:0.85rem;">
+    Na*(b3) — Attack Neglection [Eq. 3]
+  </div>
+
+  {% set sep = scan_result.na_neglection %}
+  {% set sep_abs = sep | abs %}
+  {% if sep > 0.15 %}
+    {% set na_level = "CLEAR_ANOMALY" %}
+    {% set na_color = "var(--red)" %}
+    {% set na_bg = "var(--red-bg)" %}
+    {% set na_action = "BLOCK_AND_REMOVE" %}
+  {% elif sep > 0 %}
+    {% set na_level = "MARGINAL" %}
+    {% set na_color = "var(--yellow)" %}
+    {% set na_bg = "var(--yellow-bg)" %}
+    {% set na_action = "FLAG_FOR_REVIEW" %}
+  {% else %}
+    {% set na_level = "WITHIN_TOLERANCE" %}
+    {% set na_color = "var(--green)" %}
+    {% set na_bg = "var(--green-bg)" %}
+    {% set na_action = "ALLOW" %}
+  {% endif %}
+
+  <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+
+    <div style="background:var(--bg-surface); border:1px solid var(--border);
+                border-radius:var(--radius); padding:0.85rem 1rem;">
+      <div style="font-size:0.7rem; font-weight:600; color:var(--text-muted);
+                  text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.3rem;">
+        Separation
+      </div>
+      <div style="font-family:var(--mono); font-size:1.1rem; font-weight:700;
+                  color:{{ na_color }};">
+        {{ "%.4f"|format(sep) }}
+      </div>
+      <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.15rem;">
+        normal − attack fitness
+      </div>
+    </div>
+
+    <div style="background:var(--bg-surface); border:1px solid var(--border);
+                border-radius:var(--radius); padding:0.85rem 1rem;">
+      <div style="font-size:0.7rem; font-weight:600; color:var(--text-muted);
+                  text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.3rem;">
+        Anomaly Level
+      </div>
+      <div style="font-size:0.9rem; font-weight:700; color:{{ na_color }};">
+        {{ na_level }}
+      </div>
+      <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.15rem;">
+        Na*(b3) classification
+      </div>
+    </div>
+
+    <div style="background:{{ na_bg }}; border:1px solid {{ na_color }};
+                border-radius:var(--radius); padding:0.85rem 1rem;">
+      <div style="font-size:0.7rem; font-weight:600; color:var(--text-muted);
+                  text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.3rem;">
+        Recommended Action
+      </div>
+      <div style="font-size:0.9rem; font-weight:700; color:{{ na_color }};">
+        {{ na_action }}
+      </div>
+      <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.15rem;">
+        based on separation gap
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Na* equation note -->
+  <p style="font-size:0.72rem; color:var(--text-muted); margin-top:0.85rem;">
+    <strong>Eq. 3:</strong> separation = normal_fitness ({{ "%.4f"|format(scan_result.normal_fitness) }})
+    − attack_fitness ({{ "%.4f"|format(scan_result.fitness) }}) =
+    <strong style="color:{{ na_color }};">{{ "%.4f"|format(sep) }}</strong>
+    &nbsp;·&nbsp;
+    Sep &gt; 0.15 → CLEAR_ANOMALY &nbsp;|&nbsp; Sep &gt; 0.00 → MARGINAL &nbsp;|&nbsp; Sep ≤ 0.00 → WITHIN_TOLERANCE
+  </p>
+
+  <!-- Data type note -->
+  <p style="font-size:0.72rem; color:var(--text-muted); margin-top:0.4rem;">
+    ⓘ &nbsp;Pa* always uses <code style="color:var(--accent-light);">data_type="text"</code> threshold (0.70)
+    in audit mode — encrypted bytes are uniform random-looking regardless of content type (Key Rule #11).
+  </p>
+
+</div>
+{% endif %}
+
+<!-- ── Algorithm reference cards ─────────────────────────────────────────── -->
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:0.5rem;">
+
+  <div class="obhsb-card" style="padding:1.1rem 1.25rem;">
+    <div style="font-size:0.78rem; font-weight:700; color:var(--text-secondary);
+                text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.6rem;">
+      Eq. 2 — Pa*(b3)
+    </div>
+    <div style="font-family:var(--mono); font-size:0.85rem; color:var(--accent-light);
+                background:var(--bg-surface); padding:0.5rem 0.75rem;
+                border-radius:var(--radius); border:1px solid var(--border);">
+      Pa*(b3) = Σ(normal, attack_fitness)
+    </div>
+    <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.5rem; line-height:1.5;">
+      Cosine similarity between file's hash vector and the normal profile.
+      Identifies whether a file's hash pattern matches expected normals.
+    </p>
+  </div>
+
+  <div class="obhsb-card" style="padding:1.1rem 1.25rem;">
+    <div style="font-size:0.78rem; font-weight:700; color:var(--text-secondary);
+                text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.6rem;">
+      Eq. 3 — Na*(b3)
+    </div>
+    <div style="font-family:var(--mono); font-size:0.85rem; color:var(--accent-light);
+                background:var(--bg-surface); padding:0.5rem 0.75rem;
+                border-radius:var(--radius); border:1px solid var(--border);">
+      Na*(b3) = b3(normal) − b3(attack)
+    </div>
+    <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.5rem; line-height:1.5;">
+      Separation between normal and suspicious fitness. Confirms anomaly magnitude
+      and determines action: BLOCK, FLAG, or ALLOW.
+    </p>
+  </div>
+
+</div>
+
+<!-- Loading state script -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('buffalo-form');
+    const btn  = document.getElementById('scan-btn');
+
+    form.addEventListener('submit', function () {
+      btn.disabled  = true;
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Scanning…';
+    });
+
+    // Scroll to result
+    const result = document.getElementById('buffalo-result-card');
+    if (result) result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+</script>
+<style>
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+
+{% endblock %}

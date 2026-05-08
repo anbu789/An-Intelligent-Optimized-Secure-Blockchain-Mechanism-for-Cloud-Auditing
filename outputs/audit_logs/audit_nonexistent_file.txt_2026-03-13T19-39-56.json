@@ -1,0 +1,14 @@
+{
+  "filename": "nonexistent_file.txt",
+  "data_type": "text",
+  "timestamp": "2026-03-13T19:39:56",
+  "s3_key": "encrypted/text/nonexistent_file.txt",
+  "buffalo": null,
+  "fitness": null,
+  "hash1": null,
+  "hash2": null,
+  "key_match": null,
+  "verdict": "ERROR",
+  "action_taken": "An error occurred (NoSuchKey) when calling the GetObject operation: The specified key does not exist.",
+  "log_path": null
+}

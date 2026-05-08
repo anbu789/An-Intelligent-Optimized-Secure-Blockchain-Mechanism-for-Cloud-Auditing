@@ -1,0 +1,14 @@
+{
+  "filename": "ham_0003.txt",
+  "data_type": "text",
+  "timestamp": "2026-04-15T13:22:58",
+  "s3_key": "encrypted/text/ham_0003.txt",
+  "buffalo": "MAAA",
+  "fitness": 0.8882,
+  "hash1": "a16544a5aa9d82b7cf3e306011cd63e134e2501204678f5bfac19cdca1319374",
+  "hash2": "2d70d496f1d1abace4230636282c2ffba8ec8c5ecd78f788c59f978be4237fae",
+  "key_match": false,
+  "verdict": "DATA INJECTED",
+  "action_taken": "ACCESS DENIED",
+  "log_path": null
+}

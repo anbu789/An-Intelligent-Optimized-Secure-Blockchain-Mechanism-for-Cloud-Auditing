@@ -1,0 +1,14 @@
+{
+  "filename": "IMG-20250215-WA0040 (1) (1) (1) (1).jpg",
+  "data_type": "image",
+  "timestamp": "2026-03-13T19:36:12",
+  "s3_key": "encrypted/image/IMG-20250215-WA0040 (1) (1) (1) (1).jpg",
+  "buffalo": "WAAH",
+  "fitness": null,
+  "hash1": null,
+  "hash2": null,
+  "key_match": null,
+  "verdict": "BLOCKED",
+  "action_taken": "DELETED_FROM_S3",
+  "log_path": null
+}

@@ -1,0 +1,13 @@
+boto3
+python-dotenv
+pycryptodome
+pandas
+numpy
+pillow
+librosa
+soundfile
+flask
+matplotlib
+tqdm
+kaggle
+scikit-learn

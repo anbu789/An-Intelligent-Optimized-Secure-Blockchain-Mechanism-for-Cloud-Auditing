@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}S3 File Browser — OBHSB Dashboard{% endblock %}
+{% block meta_desc %}Browse encrypted files stored in S3 and trigger cloud audits to verify file integrity.{% endblock %}
+{% block topbar_title %}S3 File Browser{% endblock %}
+
+{% block content %}
+
+<!-- ── Page heading ──────────────────────────────────────────────────────── -->
+<div class="section-title">S3 File Browser</div>
+<p class="section-sub">
+  Browse all encrypted files in <code style="color:var(--accent-light); font-size:0.8rem;">obhsb-project-anbu/encrypted/</code>.
+  Click <strong>Audit</strong> on any file to run the full Phase 3 pipeline
+  (Download → Buffalo Pa* → Hash1 vs Hash2 → Verdict).
+</p>
+
+<!-- ── Audit Result Card (shown after audit action) ──────────────────────── -->
+{% if audit_result %}
+{% set v = audit_result.verdict %}
+<div class="obhsb-card {{ 'glow-green' if v == 'FILE ACCESSED' else 'glow-red' }}"
+     id="audit-result-card" style="margin-bottom:1.5rem;">
+
+  <div class="card-header-row" style="margin-bottom:1.25rem;">
+    <span class="card-title" style="font-size:1rem;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+      </svg>
+      Audit Result — {{ audit_result.filename }}
+    </span>
+
+    <!-- Verdict badge -->
+    {% if v == "FILE ACCESSED" %}
+      <span class="badge-obhsb badge-accessed" style="font-size:0.85rem; padding:0.4rem 1rem;">
+        ✓ FILE ACCESSED
+      </span>
+    {% elif v == "DATA INJECTED" %}
+      <span class="badge-obhsb badge-injected" style="font-size:0.85rem; padding:0.4rem 1rem;">
+        ✗ DATA INJECTED
+      </span>
+    {% elif v == "BLOCKED" %}
+      <span class="badge-obhsb badge-blocked" style="font-size:0.85rem; padding:0.4rem 1rem;">
+        ⚠ BLOCKED
+      </span>
+    {% else %}
+      <span class="badge-obhsb badge-error" style="font-size:0.85rem; padding:0.4rem 1rem;">
+        {{ v or "ERROR" }}
+      </span>
+    {% endif %}
+  </div>
+
+  <!-- Metrics row -->
+  <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px,1fr)); gap:1rem; margin-bottom:1.25rem;">
+
+    <div class="stat-card">
+      <div class="stat-label">Buffalo Signal</div>
+      <div class="stat-value" style="font-size:1rem;">
+        {% if audit_result.buffalo == "MAAA" %}
+          <span style="color:var(--green);">MAAA</span>
+        {% elif audit_result.buffalo == "WAAH" %}
+          <span style="color:var(--red);">WAAH</span>
+        {% else %}—{% endif %}
+      </div>
+      <div class="stat-sub">Pa*(b3) result</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Fitness Score</div>
+      <div class="stat-value" style="font-size:1rem; font-family:var(--mono);">
+        {{ "%.4f"|format(audit_result.fitness) if audit_result.fitness is not none else "—" }}
+      </div>
+      <div class="stat-sub">Threshold: 0.70</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Key Match</div>
+      <div class="stat-value" style="font-size:1rem;">
+        {% if audit_result.key_match == true %}
+          <span style="color:var(--green);">✓ Match</span>
+        {% elif audit_result.key_match == false %}
+          <span style="color:var(--red);">✗ Mismatch</span>
+        {% else %}—{% endif %}
+      </div>
+      <div class="stat-sub">Hash1 == Hash2</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Action Taken</div>
+      <div class="stat-value" style="font-size:0.85rem;">
+        {{ audit_result.action_taken or "—" }}
+      </div>
+      <div class="stat-sub">Pipeline output</div>
+    </div>
+
+  </div>
+
+  <!-- Hash comparison -->
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+    <div>
+      <div class="obhsb-label">Hash1 — from Blockchain (immutable)</div>
+      <div class="hash-mono-full {{ 'hash-match' if audit_result.key_match else 'hash-mismatch' if audit_result.key_match == false else '' }}">
+        {{ audit_result.hash1 or "Not found in blockchain" }}
+      </div>
+    </div>
+    <div>
+      <div class="obhsb-label">Hash2 — computed from S3 download</div>
+      <div class="hash-mono-full {{ 'hash-match' if audit_result.key_match else 'hash-mismatch' if audit_result.key_match == false else '' }}">
+        {{ audit_result.hash2 or "Not computed" }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Timestamp -->
+  <p style="font-size:0.72rem; color:var(--text-muted); margin-top:0.75rem;">
+    Audited at {{ audit_result.timestamp[:19].replace("T", " ") if audit_result.timestamp else "—" }}
+    · Log saved to <code style="color:var(--accent-light);">{{ audit_result.log_path or "—" }}</code>
+  </p>
+
+</div>
+{% endif %}
+
+<!-- ── File count stat row ────────────────────────────────────────────────── -->
+<div class="stat-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom:1rem;">
+  <div class="stat-card">
+    <div class="stat-label">Text Files</div>
+    <div class="stat-value" style="color:#79c0ff;">{{ text_files|length }}</div>
+    <div class="stat-sub">encrypted/text/</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Image Files</div>
+    <div class="stat-value" style="color:#d2a8ff;">{{ image_files|length }}</div>
+    <div class="stat-sub">encrypted/image/</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Audio Files</div>
+    <div class="stat-value" style="color:#ffa657;">{{ audio_files|length }}</div>
+    <div class="stat-sub">encrypted/audio/</div>
+  </div>
+</div>
+
+<!-- ── Tabs ───────────────────────────────────────────────────────────────── -->
+<div class="obhsb-tabs" role="tablist" id="file-tabs">
+  <a href="{{ url_for('files', tab='text') }}"
+     class="obhsb-tab {% if tab == 'text' %}active{% endif %}"
+     id="tab-text" role="tab" aria-selected="{{ 'true' if tab == 'text' else 'false' }}">
+    📄 Text
+    <span style="font-size:0.7rem; color:var(--text-muted); margin-left:0.3rem;">
+      ({{ text_files|length }})
+    </span>
+  </a>
+  <a href="{{ url_for('files', tab='image') }}"
+     class="obhsb-tab {% if tab == 'image' %}active{% endif %}"
+     id="tab-image" role="tab" aria-selected="{{ 'true' if tab == 'image' else 'false' }}">
+    🖼 Image
+    <span style="font-size:0.7rem; color:var(--text-muted); margin-left:0.3rem;">
+      ({{ image_files|length }})
+    </span>
+  </a>
+  <a href="{{ url_for('files', tab='audio') }}"
+     class="obhsb-tab {% if tab == 'audio' %}active{% endif %}"
+     id="tab-audio" role="tab" aria-selected="{{ 'true' if tab == 'audio' else 'false' }}">
+    🎵 Audio
+    <span style="font-size:0.7rem; color:var(--text-muted); margin-left:0.3rem;">
+      ({{ audio_files|length }})
+    </span>
+  </a>
+</div>
+
+<!-- ── File table for active tab ─────────────────────────────────────────── -->
+{% set active_files = text_files if tab == 'text' else (image_files if tab == 'image' else audio_files) %}
+{% set active_type  = tab %}
+{% set type_color   = '#79c0ff' if tab == 'text' else ('#d2a8ff' if tab == 'image' else '#ffa657') %}
+
+<!-- Search / Filter box -->
+<div style="margin-bottom:0.75rem; position:relative;">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)"
+       stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+       style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%);" aria-hidden="true">
+    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </svg>
+  <input type="text" id="file-search" class="obhsb-input"
+         placeholder="Filter filenames…"
+         style="padding-left:2.2rem;"
+         aria-label="Filter files by name" />
+</div>
+
+{% if active_files %}
+<div class="obhsb-table-wrap" id="file-table-wrap">
+  <table class="obhsb-table" id="file-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Filename</th>
+        <th>S3 Key</th>
+        <th style="width:130px; text-align:center;">Action</th>
+      </tr>
+    </thead>
+    <tbody id="file-table-body">
+      {% for filename in active_files %}
+      <tr class="file-row" data-name="{{ filename | lower }}">
+
+        <!-- Row number -->
+        <td>
+          <span style="color:var(--text-muted); font-size:0.78rem;">{{ loop.index }}</span>
+        </td>
+
+        <!-- Filename -->
+        <td>
+          <span class="hash-mono" style="color:var(--text-primary); font-size:0.82rem;">
+            {{ filename }}
+          </span>
+        </td>
+
+        <!-- S3 key -->
+        <td>
+          <span style="font-size:0.75rem; color:var(--text-muted); font-family:var(--mono);">
+            encrypted/{{ active_type }}/{{ filename }}
+          </span>
+        </td>
+
+        <!-- Audit button -->
+        <td style="text-align:center;">
+          <form method="POST" action="{{ url_for('audit') }}"
+                class="audit-form" style="display:inline;">
+            <input type="hidden" name="filename"  value="{{ filename }}" />
+            <input type="hidden" name="data_type" value="{{ active_type }}" />
+            <button type="submit"
+                    class="btn-obhsb btn-secondary btn-sm audit-btn"
+                    id="audit-btn-{{ loop.index }}"
+                    title="Run Phase 3 audit on {{ filename }}">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M9 11l3 3L22 4"/>
+                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+              </svg>
+              Audit
+            </button>
+          </form>
+        </td>
+
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Row count info -->
+<p id="file-count-info" style="font-size:0.72rem; color:var(--text-muted); margin-top:0.5rem; text-align:right;">
+  Showing <span id="visible-count">{{ active_files|length }}</span>
+  of {{ active_files|length }} files
+</p>
+
+{% else %}
+<!-- Empty state -->
+<div class="obhsb-card" style="text-align:center; padding:3rem 1.5rem;">
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+       stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round"
+       stroke-linejoin="round" style="margin-bottom:0.75rem;" aria-hidden="true">
+    <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+  </svg>
+  <p style="color:var(--text-secondary); font-size:0.9rem;">No files found in S3 for this type.</p>
+</div>
+{% endif %}
+
+<!-- ── Audit loading state ─────────────────────────────────────────────────── -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+
+    // Show loading state on audit button click
+    document.querySelectorAll('.audit-form').forEach(function (form) {
+      form.addEventListener('submit', function () {
+        const btn = form.querySelector('.audit-btn');
+        btn.disabled    = true;
+        btn.innerHTML   = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Auditing…';
+        btn.style.color = 'var(--accent-light)';
+      });
+    });
+
+    // Scroll to audit result if present
+    const resultCard = document.getElementById('audit-result-card');
+    if (resultCard) {
+      resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // Client-side filename filter
+    const searchInput = document.getElementById('file-search');
+    const rows        = document.querySelectorAll('.file-row');
+    const countEl     = document.getElementById('visible-count');
+
+    if (searchInput) {
+      searchInput.addEventListener('input', function () {
+        const q = searchInput.value.toLowerCase().trim();
+        let visible = 0;
+        rows.forEach(function (row) {
+          const name = row.dataset.name || '';
+          const show = name.includes(q);
+          row.style.display = show ? '' : 'none';
+          if (show) visible++;
+        });
+        if (countEl) countEl.textContent = visible;
+      });
+    }
+  });
+</script>
+
+<!-- Spin animation for loading icon -->
+<style>
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+
+{% endblock %}

@@ -1,0 +1,14 @@
+{
+  "filename": "",
+  "data_type": "text",
+  "timestamp": "2026-04-14T23:41:25",
+  "s3_key": "encrypted/text/",
+  "buffalo": "MAAA",
+  "fitness": 0.8957,
+  "hash1": null,
+  "hash2": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "key_match": null,
+  "verdict": "ERROR",
+  "action_taken": "Hash1 not found in blockchain for ''. Was this file uploaded via the upload pipeline?",
+  "log_path": null
+}

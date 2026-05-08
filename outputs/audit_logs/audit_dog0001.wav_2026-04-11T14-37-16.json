@@ -1,0 +1,14 @@
+{
+  "filename": "dog0001.wav",
+  "data_type": "audio",
+  "timestamp": "2026-04-11T14:37:16",
+  "s3_key": "encrypted/audio/dog0001.wav",
+  "buffalo": null,
+  "fitness": null,
+  "hash1": null,
+  "hash2": null,
+  "key_match": null,
+  "verdict": "ERROR",
+  "action_taken": "An error occurred (NoSuchKey) when calling the GetObject operation: The specified key does not exist.",
+  "log_path": null
+}

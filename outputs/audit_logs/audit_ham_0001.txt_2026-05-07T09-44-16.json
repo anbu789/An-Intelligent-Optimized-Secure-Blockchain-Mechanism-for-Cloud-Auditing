@@ -1,0 +1,14 @@
+{
+  "filename": "ham_0001.txt",
+  "data_type": "text",
+  "timestamp": "2026-05-07T09:44:16",
+  "s3_key": "encrypted/text/ham_0001.txt",
+  "buffalo": "MAAA",
+  "fitness": 0.8936,
+  "hash1": null,
+  "hash2": "e8c6b5fb6be8e5e972b2fb70fd3a1e58fc3937d42919efe7d8b9fde05ae81379",
+  "key_match": null,
+  "verdict": "ERROR",
+  "action_taken": "no such table: blocks",
+  "log_path": null
+}

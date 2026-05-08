@@ -1,0 +1,15 @@
+{
+  "filename": "ham_0002.txt",
+  "data_type": "text",
+  "timestamp": "2026-04-13T20:38:21",
+  "s3_key": "encrypted/text/ham_0002.txt",
+  "buffalo": "MAAA",
+  "fitness": 0.8638,
+  "hash1": "fc8351305c766c3c262d39876a94de5bd4004efa1b2999d87dfc88dfbb8c28f2",
+  "hash2": "fc8351305c766c3c262d39876a94de5bd4004efa1b2999d87dfc88dfbb8c28f2",
+  "key_match": true,
+  "verdict": "FILE ACCESSED",
+  "action_taken": "DECRYPTED",
+  "log_path": null,
+  "plaintext": "Anything lor... U decide..."
+}

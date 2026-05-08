@@ -1,0 +1,15 @@
+{
+  "filename": "ham_0005.txt",
+  "data_type": "text",
+  "timestamp": "2026-04-15T10:18:17",
+  "s3_key": "encrypted/text/ham_0005.txt",
+  "buffalo": "MAAA",
+  "fitness": 0.858,
+  "hash1": "1c98754886bf80c609254c8bb2a4105010d14d923d0fd29af7cb40e3dd6bc824",
+  "hash2": "1c98754886bf80c609254c8bb2a4105010d14d923d0fd29af7cb40e3dd6bc824",
+  "key_match": true,
+  "verdict": "FILE ACCESSED",
+  "action_taken": "DECRYPTED",
+  "log_path": null,
+  "plaintext": "A pure hearted person can have a wonderful smile that makes even his/her enemies to feel guilty for being an enemy.. So catch the world with your smile..:) GOODMORNING &amp; HAVE A SMILEY SUNDAY..:)"
+}
